@@ -37,14 +37,15 @@ function updateCircularGradients(theme) {
   const isDark = theme === 'dark';
   const startColor = isDark ? '#4effdc' : '#ff66b2';
   const endColor = isDark ? '#b56eff' : '#ff99cc';
-  ['tempStop1', 'humStop1', 'ldrStop1'].forEach(id => {
+  ['ldrStop1'].forEach(id => {
     const stop = document.getElementById(id);
     if (stop) stop.setAttribute('stop-color', startColor);
   });
-  ['tempStop2', 'humStop2', 'ldrStop2'].forEach(id => {
+  ['ldrStop2'].forEach(id => {
     const stop = document.getElementById(id);
     if (stop) stop.setAttribute('stop-color', endColor);
   });
+  applySensorTemperatureColors(currentTemp);
 }
 
 // ----- Fungsi Circular Progress -----
@@ -59,6 +60,45 @@ function updateCircularProgress(elementId, percent) {
   circle.style.strokeDashoffset = offset;
 }
 
+// ----- Warna tampilan suhu dan kelembaban berdasarkan suhu -----
+const sensorStatusColors = {
+  normal: { start: '#22c55e', end: '#86efac' },
+  warning: { start: '#facc15', end: '#f97316' },
+  danger: { start: '#ef4444', end: '#f87171' }
+};
+
+function getTemperatureStatus(temp) {
+  const t = parseFloat(temp);
+  if (Number.isNaN(t)) return 'normal';
+  if (t >= 31) return 'danger';
+  if (t > 25 && t < 31) return 'warning';
+  if (t >= 20 && t <= 25) return 'normal';
+  return 'warning';
+}
+
+function applySensorTemperatureColors(temp) {
+  const status = getTemperatureStatus(temp);
+  const colors = sensorStatusColors[status];
+  const statusClasses = ['sensor-status-normal', 'sensor-status-warning', 'sensor-status-danger'];
+
+  ['tempCard', 'humCard'].forEach(id => {
+    const card = document.getElementById(id);
+    if (!card) return;
+    card.classList.remove(...statusClasses);
+    card.classList.add(`sensor-status-${status}`);
+  });
+
+  [
+    ['tempStop1', colors.start],
+    ['tempStop2', colors.end],
+    ['humStop1', colors.start],
+    ['humStop2', colors.end]
+  ].forEach(([id, color]) => {
+    const stop = document.getElementById(id);
+    if (stop) stop.setAttribute('stop-color', color);
+  });
+}
+
 // ========== UPDATE WARNING BANNER GAYA SIMULASI ==========
 function updateWarningBanner(temp) {
   const t = parseFloat(temp);
@@ -68,7 +108,7 @@ function updateWarningBanner(temp) {
     level = 'danger';
     iconHtml = '<i class="fas fa-exclamation-triangle"></i>';
     message = `⚠️ Suhu sangat panas ${t}°C! Bahaya, segera pendinginkan ruangan. ⚠️`;
-  } else if (t >= 26 && t <= 30) {
+  } else if (t > 25 && t < 31) {
     level = 'warning';
     iconHtml = '<i class="fas fa-temperature-high"></i>';
     message = `🌡️ Suhu tinggi ${t}°C, waspada dehidrasi dan gunakan kipas atau AC.`;
@@ -102,25 +142,26 @@ function updateSensorUI(temp, hum, ldr) {
 
   tempVal.innerText = temp.toFixed(1);
   humVal.innerText = Math.round(hum);
+  applySensorTemperatureColors(temp);
 
   let tempPercent = Math.min(100, (temp / 50) * 100);
   let humPercent = Math.min(100, hum);
-  let ldrPercent = (ldr.toUpperCase() === "TERANG") ? 88 : 18;
+  let ldrPercent = (ldr.toUpperCase() === "TERANG") ? 18 : 88;
 
   updateCircularProgress("tempCircleFill", tempPercent);
   updateCircularProgress("humCircleFill", humPercent);
   updateCircularProgress("ldrCircleFill", ldrPercent);
 
   if (ldr.toUpperCase() === "TERANG") {
-    ldrIconSpan.innerHTML = '☀️';
-    ldrTextSpan.innerText = 'Terang';
-  } else {
     ldrIconSpan.innerHTML = '🌙';
     ldrTextSpan.innerText = 'Gelap';
+  } else {
+    ldrIconSpan.innerHTML = '☀️';
+    ldrTextSpan.innerText = 'Terang';
   }
 
   const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  const ldrDisp = ldr.toUpperCase() === "TERANG" ? "Terang" : "Gelap";
+  const ldrDisp = ldr.toUpperCase() === "TERANG" ? "Gelap" : "Terang";
   historyData.unshift({ time: now, temp: temp.toFixed(1), hum: Math.round(hum), ldr: ldrDisp });
   if (historyData.length > 30) historyData.pop();
   renderHistoryFull();
@@ -135,8 +176,8 @@ let isDark = true;
 function applyThemeFromLDR(ldrValue) {
   const upperLdr = ldrValue.toUpperCase();
   let newTheme = '';
-  if (upperLdr === "TERANG") newTheme = 'light';
-  else if (upperLdr === "GELAP") newTheme = 'dark';
+  if (upperLdr === "TERANG") newTheme = 'dark';
+  else if (upperLdr === "GELAP") newTheme = 'light';
   else return;
 
   const currentTheme = document.documentElement.getAttribute('data-theme');
@@ -148,7 +189,7 @@ function applyThemeFromLDR(ldrValue) {
   if (themeBtn) themeBtn.innerText = isDark ? '🌙' : '🌸';
   updateChartColors();
   updateCircularGradients(newTheme);
-  addLog("System", `Tema otomatis berubah menjadi ${newTheme.toUpperCase()} (berdasarkan LDR: ${ldrValue})`, false);
+  addLog("System", `Tema otomatis berubah menjadi ${newTheme.toUpperCase()} (interpretasi LDR: ${upperLdr === "TERANG" ? "GELAP" : "TERANG"})`, false);
 }
 
 // ----- Update ESP UI -----
@@ -552,7 +593,7 @@ window.addEventListener('load', () => {
   updateSensorUI(25, 60, "GELAP");
   updateCircularProgress("tempCircleFill", 50);
   updateCircularProgress("humCircleFill", 60);
-  updateCircularProgress("ldrCircleFill", 18);
+  updateCircularProgress("ldrCircleFill", 88);
   updateCircularGradients('dark');
   initMQTT();
 
@@ -570,7 +611,7 @@ window.addEventListener('load', () => {
 
   setTimeout(() => {
     if (historyData.length === 0) {
-      historyData.push({ time: "--:--:--", temp: "25.0", hum: 60, ldr: "Gelap" });
+      historyData.push({ time: "--:--:--", temp: "25.0", hum: 60, ldr: "Terang" });
       renderHistoryFull();
     }
   }, 500);
