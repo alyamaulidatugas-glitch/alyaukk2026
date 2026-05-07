@@ -524,6 +524,59 @@ body::before {
   box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--cyan-lux);
 }
 
+.card-lux.sensor-status-normal {
+  border-color: rgba(34, 197, 94, 0.65);
+  box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(34, 197, 94, 0.35);
+}
+
+.card-lux.sensor-status-warning {
+  border-color: rgba(250, 204, 21, 0.72);
+  box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(250, 204, 21, 0.38);
+}
+
+.card-lux.sensor-status-danger {
+  border-color: rgba(239, 68, 68, 0.72);
+  box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(239, 68, 68, 0.42);
+}
+
+.card-lux.sensor-status-normal .card-header i,
+.card-lux.sensor-status-warning .card-header i,
+.card-lux.sensor-status-danger .card-header i {
+  background: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+}
+
+.card-lux.sensor-status-normal .card-header i,
+.card-lux.sensor-status-normal .circular-value {
+  color: #22c55e;
+  filter: drop-shadow(0 0 10px rgba(34, 197, 94, 0.55));
+}
+
+.card-lux.sensor-status-warning .card-header i,
+.card-lux.sensor-status-warning .circular-value {
+  color: #facc15;
+  filter: drop-shadow(0 0 10px rgba(250, 204, 21, 0.55));
+}
+
+.card-lux.sensor-status-danger .card-header i,
+.card-lux.sensor-status-danger .circular-value {
+  color: #ef4444;
+  filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.6));
+}
+
+.card-lux.sensor-status-normal .circular-progress {
+  filter: drop-shadow(0 0 8px rgba(34, 197, 94, 0.6));
+}
+
+.card-lux.sensor-status-warning .circular-progress {
+  filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.6));
+}
+
+.card-lux.sensor-status-danger .circular-progress {
+  filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.65));
+}
+
 .card-header {
   display: flex;
   align-items: center;
